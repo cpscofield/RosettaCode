@@ -14,18 +14,16 @@ object RPN {
 
   def main(args: Array[String]): Unit = {
     try {
-      val result = solve("3 4 2 * 1 5 - 2 3 ^ ^ / +")
-      println(result)
-      assert(isEqual(result, 3.00012))
-      assert(solve("3 5 +") == 8, "3 5 + != 8")
-      assert(solve("3 5 *") == 15, "3 5 * != 15")
-      assert(solve("6 3 /") == 2, "3 6 / != 2")
-      assert(solve("3 5 -") == -2, "5 3 - != -2")
-      assert(solve("2 3 ^") == 8, "3 2 ^ != 8")
-      assert(farenheitToCelsius(32) == 0, "farentheitToCelsius(32) != 0")
-      assert(isEqual(farenheitToCelsius(0), -17.7778), "farenheitToCelsius(0) != -17.7778")
-      assert(celsiusToFarenheit(0) == 32, "celsiusToFarenheit(0) != 32")
-      assert(isEqual(celsiusToFarenheit(-32), -25.6), "celsiusToFarenheit(-32) != -25.6")
+      assert(isEqual(solve("3 4 2 * 1 5 - 2 3 ^ ^ / +"), 3.00012)) // from http://rosettaCode.org
+      assert(isEqual(solve("3 5 +"), 8), "3 5 + != 8")
+      assert(isEqual(solve("3 5 *"), 15), "3 5 * != 15")
+      assert(isEqual(solve("6 3 /"), 2), "3 6 / != 2")
+      assert(isEqual(solve("3 5 -"), -2), "5 3 - != -2")
+      assert(isEqual(solve("2 3 ^"), 8), "3 2 ^ != 8")
+      assert(isEqual(fahrenheitToCelsius(32), 0), "fahrenheitToCelsius(32) != 0")
+      assert(isEqual(fahrenheitToCelsius(0), -17.7778), "fahrenheitToCelsius(0) != -17.7778")
+      assert(isEqual(celsiusToFahrenheit(0), 32), "celsiusToFahrenheit(0) != 32")
+      assert(isEqual(celsiusToFahrenheit(-32), -25.6), "celsiusToFahrenheit(-32) != -25.6")
     }
     catch {
       case e: AssertionError => println(e.toString)
@@ -33,22 +31,23 @@ object RPN {
     }
   }
 
-  // Test if two floating-point numbers are 'equal'
+  // Test if two floating-point numbers are 'equal' within a specified level of precision
   def isEqual(actual: Double, expected: Double): Boolean = {
     val EPSILON: Double = 0.0001
-    math.abs(actual) - math.abs(expected) < EPSILON
+    math.abs(actual - expected) < EPSILON
   }
 
   def solve(equation: String): Double = {
     evaluate(equation.split(" ").toList)
   }
 
-  def farenheitToCelsius(ftemp: Double): Double = {
-    var result = solve(s"5 9 / 32 $ftemp - *")
-    result
+  def fahrenheitToCelsius(ftemp: Double): Double = {
+    // C = (F - 32) * 5 / 9
+    solve(s"5 9 / $ftemp 32 - *")
   }
 
-  def celsiusToFarenheit(ctemp: Double): Double = {
+  def celsiusToFahrenheit(ctemp: Double): Double = {
+    // F = C * 9 / 5 + 32
     solve(s"$ctemp 9 5 / * 32 +")
   }
 
