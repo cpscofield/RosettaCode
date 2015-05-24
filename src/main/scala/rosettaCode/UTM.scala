@@ -37,11 +37,12 @@ object UTM {
     val blank: String = "B"
     val symbols: Symbols = List[String](blank, "1")
     val rules: Rules = HashMap[StateSymbolPair, Transition](
-      ("q0", "1") ->("1", R, "q0"),
+      ("q0", "1")   ->("1", R, "q0"),
       ("q0", blank) ->("1", S, "qf")
     )
     var tape: Tape = initializeTape(TAPE_LENGTH, blank, "111", TAPE_LENGTH/2)
-    runUTM(states, initialState, terminatingState, symbols, blank, rules, tape)
+    val result = runUTM(states, initialState, terminatingState, symbols, blank, rules, tape)
+    assert(result.mkString("").equals("BBBBBBBBBBBBBBBB1111BBBBBBBBBBBB"),s"""simpleIncrementer produced wrong result: $result.mkString("")""")
     println("---\n")
   }
 
@@ -61,7 +62,8 @@ object UTM {
       ("c", "1") ->("1", S, "halt")
     )
     var tape = initializeTape(TAPE_LENGTH, blank)
-    runUTM(states, initialState, terminatingState, symbols, blank, rules, tape)
+    val result = runUTM(states, initialState, terminatingState, symbols, blank, rules, tape)
+    assert(result.mkString("").equals("00000000000001111110000000000000"), s"""threeStateBusyBeaver produced wrong result: $result.mkString("")""")
     println("---\n")
   }
 
@@ -89,7 +91,8 @@ object UTM {
       ("se", blank) ->(blank, R, "see")
     )
     var tape = initializeTape(TAPE_LENGTH, blank,"babbababaa",TAPE_LENGTH/2)
-    runUTM(states, initialState, terminatingState, symbols, blank, rules, tape)
+    val result = runUTM(states, initialState, terminatingState, symbols, blank, rules, tape)
+    assert(result.mkString("").equals("****************aaaaabbbbb******"),s"""sorter produced wrong result: $result.mkString("")""")
     println("---\n\n")
   }
 
@@ -132,7 +135,7 @@ object UTM {
    * @param initialTape
    */
   def runUTM(states: States, initialState: String, terminatingState: String, symbols: Symbols,
-                 blank: String, rules: Rules, initialTape: Tape): Unit = {
+                 blank: String, rules: Rules, initialTape: Tape): Tape = {
 
     var currentState = initialState
     var headPosition: Int = initialTape.length / 2
@@ -186,6 +189,8 @@ object UTM {
     }
 
     println(s"$stepCount steps")
+
+    tape
 
   }
 
@@ -306,3 +311,103 @@ object UTM {
   }
 }
 
+//simpleIncrement:
+//tape=BBBBBBBBBBBBBBBB1(1)1BBBBBBBBBBBBB
+//tape=BBBBBBBBBBBBBBBB11(1)BBBBBBBBBBBBB
+//tape=BBBBBBBBBBBBBBBB111(B)BBBBBBBBBBBB
+//tape=BBBBBBBBBBBBBBBB111(1)BBBBBBBBBBBB
+//4 steps
+//---
+//
+//threeStateBusyBeaver:
+//tape=00000000000000001(0)00000000000000
+//tape=0000000000000000(1)100000000000000
+//tape=000000000000000(0)1100000000000000
+//tape=00000000000000(0)11100000000000000
+//tape=0000000000000(0)111100000000000000
+//tape=00000000000001(1)11100000000000000
+//tape=000000000000011(1)1100000000000000
+//tape=0000000000000111(1)100000000000000
+//tape=00000000000001111(1)00000000000000
+//tape=000000000000011111(0)0000000000000
+//tape=00000000000001111(1)10000000000000
+//tape=0000000000000111(1)110000000000000
+//tape=0000000000000111(1)110000000000000
+//13 steps
+//---
+//
+//sorter
+//tape=****************B(a)bbababaa******
+//tape=****************Ba(b)bababaa******
+//tape=****************Bab(b)ababaa******
+//tape=****************Babb(a)babaa******
+//tape=****************Babba(b)abaa******
+//tape=****************Babbab(a)baa******
+//tape=****************Babbaba(b)aa******
+//tape=****************Babbabab(a)a******
+//tape=****************Babbababa(a)******
+//tape=****************Babbababaa(*)*****
+//tape=****************Babbababa(a)******
+//tape=****************Babbabab(a)b******
+//tape=****************Babbaba(b)ab******
+//tape=****************Babbab(a)bab******
+//tape=****************Babba(b)abab******
+//tape=****************Babb(a)babab******
+//tape=****************Bab(b)ababab******
+//tape=****************Ba(b)bababab******
+//tape=****************B(a)bbababab******
+//tape=****************(B)abbababab******
+//tape=****************a(a)bbababab******
+//tape=****************aa(b)bababab******
+//tape=****************aaB(b)ababab******
+//tape=****************aaBb(a)babab******
+//tape=****************aaBba(b)abab******
+//tape=****************aaBbab(a)bab******
+//tape=****************aaBbaba(b)ab******
+//tape=****************aaBbabab(a)b******
+//tape=****************aaBbababa(b)******
+//tape=****************aaBbababab(*)*****
+//tape=****************aaBbababa(b)******
+//tape=****************aaBbabab(a)b******
+//tape=****************aaBbaba(b)bb******
+//tape=****************aaBbab(a)bbb******
+//tape=****************aaBba(b)abbb******
+//tape=****************aaBb(a)babbb******
+//tape=****************aaB(b)ababbb******
+//tape=****************aa(B)bababbb******
+//tape=****************aaa(b)ababbb******
+//tape=****************aaaB(a)babbb******
+//tape=****************aaaBa(b)abbb******
+//tape=****************aaaBab(a)bbb******
+//tape=****************aaaBaba(b)bb******
+//tape=****************aaaBabab(b)b******
+//tape=****************aaaBababb(b)******
+//tape=****************aaaBababbb(*)*****
+//tape=****************aaaBababb(b)******
+//tape=****************aaaBabab(b)b******
+//tape=****************aaaBaba(b)bb******
+//tape=****************aaaBab(a)bbb******
+//tape=****************aaaBa(b)bbbb******
+//tape=****************aaaB(a)bbbbb******
+//tape=****************aaa(B)abbbbb******
+//tape=****************aaaa(a)bbbbb******
+//tape=****************aaaaa(b)bbbb******
+//tape=****************aaaaaB(b)bbb******
+//tape=****************aaaaaBb(b)bb******
+//tape=****************aaaaaBbb(b)b******
+//tape=****************aaaaaBbbb(b)******
+//tape=****************aaaaaBbbbb(*)*****
+//tape=****************aaaaaBbbb(b)******
+//tape=****************aaaaaBbb(b)b******
+//tape=****************aaaaaBb(b)bb******
+//tape=****************aaaaaB(b)bbb******
+//tape=****************aaaaa(B)bbbb******
+//tape=****************aaaa(a)bbbbb******
+//tape=****************aaa(a)abbbbb******
+//tape=****************aa(a)aabbbbb******
+//tape=****************a(a)aaabbbbb******
+//tape=****************(a)aaaabbbbb******
+//tape=***************(*)aaaaabbbbb******
+//tape=****************(a)aaaabbbbb******
+//72 steps
+//---
