@@ -1,7 +1,6 @@
 package rosettaCode
 
-import scala.collection.mutable.{ArrayBuffer}
-import scala.collection.immutable.{HashMap}
+import scala.collection.immutable.HashMap
 
 /**
  * Solution for http://rosettacode.org/wiki/Universal_Turing_machine
@@ -16,20 +15,19 @@ object UTM {
     sorter
   }
 
-  val TRACE : Boolean = false;
+  val TRACE : Boolean = false
   val TAPE_LENGTH = 32
   type Tape = Array[String]
   type States = List[String]
   type Symbols = List[String]
   type Rules = HashMap[StateSymbolPair, Transition]
   type StateSymbolPair = (String, String)  // (state,symbol)
-  type Transition = (String, String, String)  // (symbol,movement,new state)
 
   val L: String = "L" // Left
   val R: String = "R" // Right
   val S: String = "S" // Stay
 
-  def simpleIncrementer: Unit = {
+  def simpleIncrementer = {
     println("simpleIncrement:")
     val states: States = List[String]("q0", "qf")
     val initialState = "q0"
@@ -37,16 +35,16 @@ object UTM {
     val blank: String = "B"
     val symbols: Symbols = List[String](blank, "1")
     val rules: Rules = HashMap[StateSymbolPair, Transition](
-      ("q0", "1")   ->("1", R, "q0"),
-      ("q0", blank) ->("1", S, "qf")
+      ("q0", "1")   ->new Transition("1", R, "q0"),
+      ("q0", blank) ->new Transition("1", S, "qf")
     )
-    var tape: Tape = initializeTape(TAPE_LENGTH, blank, "111", TAPE_LENGTH/2)
+    val tape: Tape = initializeTape(TAPE_LENGTH, blank, "111", TAPE_LENGTH/2)
     val result = runUTM(states, initialState, terminatingState, symbols, blank, rules, tape)
     assert(result.mkString("").equals("BBBBBBBBBBBBBBBB1111BBBBBBBBBBBB"),s"""simpleIncrementer produced wrong result: $result.mkString("")""")
     println("---\n")
   }
 
-  def threeStateBusyBeaver: Unit = {
+  def threeStateBusyBeaver = {
     println("threeStateBusyBeaver:")
     val states: States = List[String]("a", "b", "c", "halt")
     val initialState = "a"
@@ -54,20 +52,20 @@ object UTM {
     val blank: String = "0"
     val symbols: Symbols = List[String]("0", "1")
     val rules: Rules = HashMap[StateSymbolPair, Transition](
-      ("a", "0") ->("1", R, "b"),
-      ("a", "1") ->("1", L, "c"),
-      ("b", "0") ->("1", L, "a"),
-      ("b", "1") ->("1", R, "b"),
-      ("c", "0") ->("1", L, "b"),
-      ("c", "1") ->("1", S, "halt")
+      ("a", "0") ->new Transition("1", R, "b"),
+      ("a", "1") ->new Transition("1", L, "c"),
+      ("b", "0") ->new Transition("1", L, "a"),
+      ("b", "1") ->new Transition("1", R, "b"),
+      ("c", "0") ->new Transition("1", L, "b"),
+      ("c", "1") ->new Transition("1", S, "halt")
     )
-    var tape = initializeTape(TAPE_LENGTH, blank)
+    val tape = initializeTape(TAPE_LENGTH, blank)
     val result = runUTM(states, initialState, terminatingState, symbols, blank, rules, tape)
     assert(result.mkString("").equals("00000000000001111110000000000000"), s"""threeStateBusyBeaver produced wrong result: $result.mkString("")""")
     println("---\n")
   }
 
-  def sorter: Unit = {
+  def sorter = {
     println("sorter")
     val states: States = List[String]("s0", "s1", "s2", "s3", "se", "see")
     val initialState = "s0"
@@ -75,22 +73,22 @@ object UTM {
     val blank = "*"
     val symbols: Symbols = List[String]("a", "b", blank, "B")
     val rules: Rules = HashMap[StateSymbolPair, Transition](
-      ("s0", "a")   ->("a", R, "s0"),
-      ("s0", "b")   ->("B", R, "s1"),
-      ("s0", blank) ->(blank, L, "se"),
-      ("s1", "a")   ->("a", R, "s1"),
-      ("s1", "b")   ->("b", R, "s1"),
-      ("s1", blank) ->(blank, L, "s2"),
-      ("s2", "a")   ->("b", L, "s3"),
-      ("s2", "b")   ->("b", L, "s2"),
-      ("s2", "B")   ->("b", L, "se"),
-      ("s3", "a")   ->("a", L, "s3"),
-      ("s3", "b")   ->("b", L, "s3"),
-      ("s3", "B")   ->("a", R, "s0"),
-      ("se", "a")   ->("a", L, "se"),
-      ("se", blank) ->(blank, R, "see")
+      ("s0", "a")   ->new Transition("a", R, "s0"),
+      ("s0", "b")   ->new Transition("B", R, "s1"),
+      ("s0", blank) ->new Transition(blank, L, "se"),
+      ("s1", "a")   ->new Transition("a", R, "s1"),
+      ("s1", "b")   ->new Transition("b", R, "s1"),
+      ("s1", blank) ->new Transition(blank, L, "s2"),
+      ("s2", "a")   ->new Transition("b", L, "s3"),
+      ("s2", "b")   ->new Transition("b", L, "s2"),
+      ("s2", "B")   ->new Transition("b", L, "se"),
+      ("s3", "a")   ->new Transition("a", L, "s3"),
+      ("s3", "b")   ->new Transition("b", L, "s3"),
+      ("s3", "B")   ->new Transition("a", R, "s0"),
+      ("se", "a")   ->new Transition("a", L, "se"),
+      ("se", blank) ->new Transition(blank, R, "see")
     )
-    var tape = initializeTape(TAPE_LENGTH, blank,"babbababaa",TAPE_LENGTH/2)
+    val tape = initializeTape(TAPE_LENGTH, blank,"babbababaa",TAPE_LENGTH/2)
     val result = runUTM(states, initialState, terminatingState, symbols, blank, rules, tape)
     assert(result.mkString("").equals("****************aaaaabbbbb******"),s"""sorter produced wrong result: $result.mkString("")""")
     println("---\n\n")
@@ -126,13 +124,13 @@ object UTM {
 
   /**
    * Run the Univeral Turing Machine.
-   * @param states
-   * @param initialState
-   * @param terminatingState
-   * @param symbols
-   * @param blank
-   * @param rules
-   * @param initialTape
+   * @param states List of valid dates
+   * @param initialState The initial state of the UTM
+   * @param terminatingState The terminating state of the UTM
+   * @param symbols List of valid symbols
+   * @param blank The symbol representing a 'blank'
+   * @param rules The map of rules
+   * @param initialTape The initial state of the tape
    */
   def runUTM(states: States, initialState: String, terminatingState: String, symbols: Symbols,
                  blank: String, rules: Rules, initialTape: Tape): Tape = {
@@ -145,7 +143,7 @@ object UTM {
     if(TRACE) println(s"terminatingState=$terminatingState")
     while (currentState != terminatingState) {
 
-      if (TRACE) println(s"Step #$stepCount");
+      if (TRACE) println(s"Step #$stepCount")
       stepCount += 1
 
       if (headPosition < 0) {
@@ -168,19 +166,20 @@ object UTM {
         println("")
       }
 
-      var transition = rules.get((currentState, tape(headPosition)))
-      if(TRACE) println("trans=" + printTransition(transition))
+      val transition = rules.get((currentState, tape(headPosition))).
+        getOrElse(throw new RuntimeException(s"transition not found in rules"))
+      if (TRACE) println("trans=" + transition)
 
-      replaceSymbol(tape, headPosition, transition)
+      tape(headPosition) = transition.symbol
 
-      getMovement(transition) match {
+      currentState = transition.state
+
+      transition.movement match {
         case L => headPosition -= 1 // move to the left
         case R => headPosition += 1 // move to the right
-        case S => ; // else don't move
-        case _ => throw new RuntimeException("Bad transition?: " + printTransition(transition))
+        case S => ; // don't move
+        case _ => throw new RuntimeException("Bad transition?: " + transition)
       }
-
-      currentState = getState(transition)
 
       print("tape=")
       printTape(tape, headPosition)
@@ -194,11 +193,18 @@ object UTM {
 
   }
 
+  class Transition(val symbol:String,  val movement:String, val state:String) {
+    def this(trans:(String,String,String)){
+      this(trans._1,trans._2,trans._3)
+    }
+    override def toString = s"symbol=$symbol movement=$movement state=$state"
+  }
+
   /**
    * Initialize 'blank' tape with fill character.
-   * @param length
-   * @param fillChar
-   * @return
+   * @param length What the length of the tape will be.
+   * @param fillChar The fill character for the tape
+   * @return Initialized tape
    */
   def initializeTape(length: Int, fillChar: String): Tape = {
     var tape = new Tape(length)
@@ -206,6 +212,16 @@ object UTM {
     tape
   }
 
+  /**
+   * Initialize 'blank' tape with fill character and specified set of symbols
+   * at location fillPosition.
+   *
+   * @param length What the length of the tape will be.
+   * @param fillChar The fill character for the tape
+   * @param fillString The symbols to place on the tape
+   * @param fillPosition The starting position of fillString
+   * @return Initialized tape
+   */
   def initializeTape(length: Int, fillChar: String, fillString: String, fillPosition: Int) : Tape = {
     var tape = initializeTape(length,fillChar)
     var middle = fillPosition
@@ -218,60 +234,9 @@ object UTM {
   }
 
   /**
-   * Show contents of transition tuple.
-   * @param transition
-   */
-  def printTransition(transition: Option[Transition]): Unit = {
-    val trans = transition.getOrElse(("", "", ""))
-    val symbol = trans._1
-    val movement = trans._2
-    val state = trans._3
-    println(s"trans=($symbol,$movement,$state)")
-  }
-
-  /**
-   * Extract symbol from transition tuple.
-   * @param transition
-   * @return symbol
-   */
-  def getSymbol(transition: Option[Transition]): String = {
-    transition.getOrElse(("", "", ""))._1
-  }
-
-  /**
-   * Extract movement direction from transition tuple.
-   * @param transition
-   * @return movement
-   */
-  def getMovement(transition: Option[Transition]): String = {
-    transition.getOrElse(("", "", ""))._2
-  }
-
-  /**
-   * Extract state from transition tuple.
-   * @param transition
-   * @return state
-   */
-  def getState(transition: Option[Transition]): String = {
-    transition.getOrElse(("", "", ""))._3
-  }
-
-  /**
-   * Replace simple at specified position in tape.
-   * @param tape
-   * @param position
-   * @param transition
-   */
-  def replaceSymbol(tape: Tape, position: Int, transition: Option[Transition]): Unit = {
-    val symbol = getSymbol(transition)
-    if(TRACE) println( s"Putting $symbol at position=$position")
-    tape(position) = symbol
-  }
-
-  /**
    * Show contents of tape. Put parentheses around position of where the head is.
-   * @param tape
-   * @param headPosition
+   * @param tape The tape
+   * @param headPosition The current position on the tape of where the head is.
    */
   def printTape(tape: Tape, headPosition: Int): Unit = {
     for (t <- 0 until tape.length) {
@@ -285,11 +250,10 @@ object UTM {
     }
   }
 
-
   /**
    * Prepend a tape segment.
-   * @param tape
-   * @param fillChar
+   * @param tape The tape to be prepended to.
+   * @param fillChar The fill character for prepended portion of the tape.
    * @return tuple of extended tape and current head position.
    */
   def prependTape(tape:Tape,fillChar:String) : (Tape,Int) = {
@@ -300,8 +264,8 @@ object UTM {
 
   /**
    * Append a tape segment.
-   * @param tape
-   * @param fillChar
+   * @param tape The tape to be appended to
+   * @param fillChar The fill character for appended portion of the tape.
    * @return tuple of extended tape and current head position.
    */
   def appendTape(tape:Tape,fillChar:String) : (Tape,Int) = {
@@ -309,6 +273,7 @@ object UTM {
     val newTape : Tape = tape ++ extraTape
     (newTape,tape.length)
   }
+
 }
 
 //simpleIncrement:
