@@ -4,7 +4,13 @@ import scala.util.matching.Regex
 import java.net.Inet6Address
 
 /**
+ * <p>
  * Attempted solution to http://rosettacode.org/wiki/Parse_an_IP_Address
+ * <p>
+ * <ul>For information on IPV6 addresses:
+ * <li>https://tools.ietf.org/html/rfc4291
+ * <li>https://tools.ietf.org/pdf/rfc4291.pdf
+ * </ul>
  */
 
 object IpAddressParser extends App {
@@ -17,11 +23,16 @@ object IpAddressParser extends App {
     ("0.0.0.0", (IPV4, (0L, 0L), -1))
     , ("127.0.0.1", (IPV4, (0x0L, 0x7f000001L), -1))
     , ("127.0.0.1:80", (IPV4, (0x0L, 0x7f000001L), 80))
-//            ,("::1", (IPV6, (0x0L, 0x0000000000000001L), -1))
-//            ,("[::1]:80", (IPV6, (0x0L, 0x0000000000000001L), 80))
-//            ,("2605:2700:0:3::4713:93e3", (IPV6, (0x2605270000000003L, 0x00000000471393e3L), -1))
-//            ,("[2605:2700:0:3::4713:93e3]:80", (IPV6, (0x2605270000000003L, 0x00000000471393e3L), 80))
-  , ("1080:0:0:0:8:800:200C:417A", (IPV6, (0x1080000000000000L, 0x00080800200c417aL), -1))
+    , ("::1", (IPV6, (0x0L, 0x1L), -1))
+    , ("::", (IPV6, (0x0L, 0x0L), -1))
+    , ("FF01::101", (IPV6, (0xFF01000000000000L, 0x101L), -1))
+    //, ("[::1]:80", (IPV6, (0x0L, 0x0000000000000001L), 80))
+    , ("2605:2700:0:3:0:0:4713:93e3", (IPV6, (0x2605270000000003L, 0x00000000471393e3L), -1))
+    , ("2605:2700:0:3::4713:93e3",    (IPV6, (0x2605270000000003L, 0x00000000471393e3L), -1))
+    //, ("[2605:2700:0:3::4713:93e3]:80", (IPV6, (0x2605270000000003L, 0x00000000471393e3L), 80))
+    , ("1080:0:0:0:8:800:200C:417A",   (IPV6, (0x1080000000000000L, 0x00080800200c417aL), -1))
+    , ("2001:DB8::8:800:200C:417A",    (IPV6, (0x20010db800000000L, 0x00080800200c417aL), -1))
+    , ("2001:DB8:0:0:8:800:200C:417A", (IPV6, (0x20010db800000000L, 0x00080800200c417aL), -1))
   )
 
   for (ipAddress <- ipAddresses) {
@@ -91,32 +102,48 @@ object IpAddressParser extends App {
   // Reference: https://tools.ietf.org/html/rfc4291
 
   def parseIPV6(ipAddress: String, port: Int): Option[ResultType] = {
+    val ipAddr: Option[String] = if (ipAddress.indexOf("::") != -1) expandIpV6Addr(ipAddress) else Some(ipAddress)
     val ipvType = IPV6
     var addrPart1: Long = 0
     var addrPart2: Long = 0
     if (port == -1) {
-      val parts = ipAddress.split(":")
-      if (parts.size == 8) {
-        // The simple case
-        for(part <- 0 to 3) {
-          part match {
-            case 0 => addrPart1 |= hexToLong(parts(0))<<48
-            case 1 => addrPart1 |= hexToLong(parts(1))<<32
-            case 2 => addrPart1 |= hexToLong(parts(2))<<16
-            case 3 => addrPart1 |= hexToLong(parts(3))
-          }
+      val parts = ipAddr.getOrElse("").split(":")
+      if(parts.size != 8) println("parts wrong size: " + parts.size + " " + ipAddr.get)
+      for (part <- 0 to 3) {
+        part match {
+          case 0 => addrPart1 |= hexToLong(parts(0)) << 48
+          case 1 => addrPart1 |= hexToLong(parts(1)) << 32
+          case 2 => addrPart1 |= hexToLong(parts(2)) << 16
+          case 3 => addrPart1 |= hexToLong(parts(3))
         }
-        for(part <- 4 to 7) {
-          part match {
-            case 4 => addrPart2 |= hexToLong(parts(4))<<48
-            case 5 => addrPart2 |= hexToLong(parts(5))<<32
-            case 6 => addrPart2 |= hexToLong(parts(6))<<16
-            case 7 => addrPart2 |= hexToLong(parts(7))
-          }
+      }
+      for (part <- 4 to 7) {
+        part match {
+          case 4 => addrPart2 |= hexToLong(parts(4)) << 48
+          case 5 => addrPart2 |= hexToLong(parts(5)) << 32
+          case 6 => addrPart2 |= hexToLong(parts(6)) << 16
+          case 7 => addrPart2 |= hexToLong(parts(7))
         }
       }
     }
-    Some[ResultType](ipvType,(addrPart1,addrPart2),port)
+    Some[ResultType](ipvType, (addrPart1, addrPart2), port)
+  }
+
+  /**
+   * Expand an IP address string containing compressed zeros into full 8-part string.
+   *
+   * @param ipAddress
+   * @return
+   */
+  def expandIpV6Addr(ipAddress: String): Option[String] = {
+    val zerosIndex = ipAddress.indexOf("::")
+    if(zerosIndex == -1) Some(ipAddress) // no compressed zeros in string
+    val nparts = 8 - (ipAddress.split(":").size - 2)
+    var expanded : StringBuilder = new StringBuilder
+    expanded.append(ipAddress.substring(0,zerosIndex+1))
+    for( i <- 0 until nparts -1 ) expanded.append("0:")
+    expanded.append(ipAddress.substring(zerosIndex+2))
+    Some(expanded.toString)
   }
 
   /**
